@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BromoTrek Admin Portal</title>
+    <!-- Google Font 'Poppins' -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Brand Colors */
+            --primary-color: #ff8c00;
+            --primary-gradient: linear-gradient(135deg, #ff8c00 0%, #ff0055 100%);
+
+            /* Dark Mode Palette */
+            --bg-main: #0f1014;
+            --bg-secondary: #1a1d24;
+
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: 16px;
+
+            /* Text Colors */
+            --text-main: #ffffff;
+            --text-muted: #b0b3b8;
+
+            --font-main: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            background: rgba(20, 22, 27, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+            display: none;
+            /* Hidden until login */
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 140, 0, 0.1);
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            text-align: center;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+        }
+
+        /* --- ADMIN TABLE --- */
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--text-muted);
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-color);
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .btn {
+            padding: 8px 15px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #444;
+        }
+
+        /* --- LOGIN SCREEN --- */
+        .login-container {
+            text-align: center;
+            background: var(--bg-secondary);
+            padding: 50px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-input {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Modal for Answering */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--glass-border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="login-container">
+        <h2>Admin Login</h2>
+        <p style="color: var(--text-muted);">Enter password to access dashboard</p>
+        <input type="password" id="adminPass" class="login-input" placeholder="Password">
+        <button onclick="checkLogin()" class="btn">Login</button>
+        <p id="errorMsg" style="color: red; display: none;">Invalid Password</p>
+        <a href="bromo.html" style="color: var(--text-muted); font-size: 0.9rem;">&larr; Back to Website</a>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="container">
+        <h2 style="margin-bottom: 10px;">Admin Dashboard</h2>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('bookings')">Bookings</button>
+            <button class="tab-btn" onclick="switchTab('qna')">Q&A Management</button>
+            <button class="tab-btn" onclick="switchTab('comments')">Comments Management</button>
+        </div>
+
+        <!-- Bookings Tab -->
+        <div id="bookingsTab" class="tab-content active">
+            <h3 style="margin-bottom: 15px; color: var(--text-muted);">Recent Transactions</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Guest</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Proof</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminBookingList">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Q&A Tab -->
+        <div id="qnaTab" class="tab-content">
+            <h3 style="margin-bottom: 15px; color: var(--text-muted);">Customer Inquiries</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>Date</th>
+                            <th>Question</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminQnaList">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Comments Tab -->
+        <div id="commentsTab" class="tab-content">
+            <h3 style="margin-bottom: 15px; color: var(--text-muted);">Visitor Comments</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>Date</th>
+                            <th>Content</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminCommentsList">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="nav-links">
+            <button onclick="logout()" class="btn btn-secondary">Logout</button>
+            <a href="bromo.html" class="btn btn-secondary" style="text-decoration:none;">Go to Home</a>
+        </div>
+    </div>
+
+    <!-- Answer Modal -->
+    <div id="answerModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; color: var(--primary-color);">Reply to Question</h3>
+            <p id="questionText" style="margin-bottom: 15px; color: var(--text-muted); font-style: italic;"></p>
+            <textarea id="answerText" class="login-input" placeholder="Type your answer here..." rows="4"
+                style="width: 100%; margin-bottom: 20px; outline: none;"></textarea>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="closeAnswerModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveAnswer()" class="btn">Send Reply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirmDeleteModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+            <h3 style="margin-bottom: 10px; color: var(--text-main);">Confirm Deletion</h3>
+            <p id="confirmDeleteMsg" style="margin-bottom: 25px; color: var(--text-muted);">Are you sure you want to
+                delete this item? This action cannot be undone.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="closeConfirmModal()" class="btn btn-secondary" style="flex: 1;">NO (Cancel)</button>
+                <button id="confirmDeleteBtn" class="btn" style="background: #dc3545; flex: 1;">YES (Delete)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkLogin() {
+            const pass = document.getElementById("adminPass").value;
+            // Simple hardcoded password for demo
+            if (pass === "admin123") {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("dashboard").style.display = "flex";
+                loadAdminData();
+            } else {
+                document.getElementById("errorMsg").style.display = "block";
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        function loadAdminData() {
+            const list = document.getElementById("adminBookingList");
+            const bookings = JSON.parse(localStorage.getItem('bromo_bookings') || '[]');
+
+            list.innerHTML = "";
+
+            if (bookings.length === 0) {
+                list.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 20px;'>No bookings yet.</td></tr>";
+                return;
+            }
+
+            bookings.forEach((booking, index) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${booking.id}</td>
+                    <td>${booking.name}</td>
+                    <td>${booking.date}</td>
+                    <td>${booking.total}</td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="viewProof('${index}')">View</button>
+                    </td>
+                    <td>
+                        <select onchange="updateStatus(${index}, this.value)" style="background: ${getStatusColor(booking.status)}; color: white; border: none; padding: 5px; border-radius: 5px;">
+                            <option value="Pending" ${booking.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Paid" ${booking.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                            <option value="Verified" ${booking.status === 'Verified' ? 'selected' : ''}>Verified</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn" style="background: #dc3545; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteBooking(${index})">Delete</button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        // --- CUSTOM CONFIRMATION ---
+        let deleteAction = null;
+
+        function showConfirmModal(message, onConfirm) {
+            document.getElementById('confirmDeleteMsg').innerText = message;
+            document.getElementById('confirmDeleteModal').style.display = 'flex';
+            document.getElementById('confirmDeleteBtn').onclick = () => {
+                onConfirm();
+                closeConfirmModal();
+            };
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmDeleteModal').style.display = 'none';
+        }
+
+        function deleteBooking(index) {
+            showConfirmModal("Are you sure you want to delete this booking history?", () => {
+                const bookings = JSON.parse(localStorage.getItem('bromo_bookings') || '[]');
+                bookings.splice(index, 1);
+                localStorage.setItem('bromo_bookings', JSON.stringify(bookings));
+                loadAdminData();
+            });
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'Paid': return '#28a745';
+                case 'Verified': return '#007bff';
+                default: return '#ffc107';
+            }
+        }
+
+        function viewProof(index) {
+            const bookings = JSON.parse(localStorage.getItem('bromo_bookings') || '[]');
+            const proof = bookings[index].proof;
+            if (proof) {
+                const win = window.open();
+                win.document.write('<img src="' + proof + '" style="width:100%">');
+            } else {
+                alert("No proof uploaded for this booking.");
+            }
+        }
+
+        function updateStatus(index, newStatus) {
+            const bookings = JSON.parse(localStorage.getItem('bromo_bookings') || '[]');
+            bookings[index].status = newStatus;
+            localStorage.setItem('bromo_bookings', JSON.stringify(bookings));
+            loadAdminData();
+        }
+
+        // --- Q&A MANAGEMENT ---
+        let currentQnaId = null;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'bookings') {
+                document.querySelector('.tab-btn[onclick*="bookings"]').classList.add('active');
+                document.getElementById('bookingsTab').classList.add('active');
+                loadAdminData();
+            } else if (tab === 'qna') {
+                document.querySelector('.tab-btn[onclick*="qna"]').classList.add('active');
+                document.getElementById('qnaTab').classList.add('active');
+                loadQnaData();
+            } else {
+                document.querySelector('.tab-btn[onclick*="comments"]').classList.add('active');
+                document.getElementById('commentsTab').classList.add('active');
+                loadCommentsData();
+            }
+        }
+
+        function loadQnaData() {
+            const list = document.getElementById("adminQnaList");
+            const qnaData = JSON.parse(localStorage.getItem('bromo_qna') || '[]');
+
+            list.innerHTML = "";
+
+            if (qnaData.length === 0) {
+                list.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px;'>No questions yet.</td></tr>";
+                return;
+            }
+
+            // Sort so Pending is at top
+            qnaData.sort((a, b) => (a.status === 'Pending' ? -1 : 1));
+
+            qnaData.forEach((q) => {
+                const tr = document.createElement("tr");
+                const statusColor = q.status === 'Answered' ? '#28a745' : '#ffc107';
+
+                tr.innerHTML = `
+                    <td>${q.customer}</td>
+                    <td>${q.timestamp}</td>
+                    <td>${q.question}</td>
+                    <td><span style="color: ${statusColor}; font-weight: 600;">${q.status}</span></td>
+                    <td>
+                        <button class="btn" style="padding: 5px 10px; font-size: 0.8rem;" onclick="openAnswerModal('${q.id}')">${q.status === 'Answered' ? 'Edit Reply' : 'Reply'}</button>
+                        ${q.status === 'Answered' ? `<button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="deleteAnswer('${q.id}')">Clear Answer</button>` : ''}
+                        <button class="btn" style="background: #dc3545; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteQna('${q.id}')">Delete Question</button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        function deleteQna(id) {
+            showConfirmModal("Are you sure you want to delete this inquiry and its answer permanently?", () => {
+                const qnaData = JSON.parse(localStorage.getItem('bromo_qna') || '[]');
+                const filtered = qnaData.filter(q => q.id !== id);
+                localStorage.setItem('bromo_qna', JSON.stringify(filtered));
+                loadQnaData();
+            });
+        }
+
+        function deleteAnswer(id) {
+            showConfirmModal("Are you sure you want to delete only the answer for this inquiry?", () => {
+                const qnaData = JSON.parse(localStorage.getItem('bromo_qna') || '[]');
+                const index = qnaData.findIndex(q => q.id === id);
+                if (index !== -1) {
+                    qnaData[index].answer = null;
+                    qnaData[index].status = 'Pending';
+                    localStorage.setItem('bromo_qna', JSON.stringify(qnaData));
+                    loadQnaData();
+                }
+            });
+        }
+
+        // --- COMMENTS MANAGEMENT ---
+        function loadCommentsData() {
+            const list = document.getElementById("adminCommentsList");
+            const comments = JSON.parse(localStorage.getItem('bromo_comments') || '[]');
+
+            list.innerHTML = "";
+
+            if (comments.length === 0) {
+                list.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px;'>No comments yet.</td></tr>";
+                return;
+            }
+
+            comments.forEach((c) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${c.name}</td>
+                    <td>${c.timestamp}</td>
+                    <td>${c.text}</td>
+                    <td>
+                        <button class="btn" style="background: #dc3545; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteComment('${c.id}')">Delete</button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        function deleteComment(id) {
+            showConfirmModal("Are you sure you want to delete this visitor comment?", () => {
+                const comments = JSON.parse(localStorage.getItem('bromo_comments') || '[]');
+                const filtered = comments.filter(c => c.id !== id);
+                localStorage.setItem('bromo_comments', JSON.stringify(filtered));
+                loadCommentsData();
+            });
+        }
+
+        function openAnswerModal(id) {
+            const qnaData = JSON.parse(localStorage.getItem('bromo_qna') || '[]');
+            const question = qnaData.find(q => q.id === id);
+
+            if (question) {
+                currentQnaId = id;
+                document.getElementById('questionText').innerText = '"' + question.question + '"';
+                document.getElementById('answerText').value = question.answer || '';
+                document.getElementById('answerModal').style.display = 'flex';
+            }
+        }
+
+        function closeAnswerModal() {
+            document.getElementById('answerModal').style.display = 'none';
+            currentQnaId = null;
+        }
+
+        function saveAnswer() {
+            const answer = document.getElementById('answerText').value;
+            if (!answer.trim()) return alert("Please type an answer.");
+
+            const qnaData = JSON.parse(localStorage.getItem('bromo_qna') || '[]');
+            const index = qnaData.findIndex(q => q.id === currentQnaId);
+
+            if (index !== -1) {
+                qnaData[index].answer = answer;
+                qnaData[index].status = 'Answered';
+                localStorage.setItem('bromo_qna', JSON.stringify(qnaData));
+                closeAnswerModal();
+                loadQnaData();
+            }
+        }
+
+
+        // Allow Enter key to login
+        document.getElementById("adminPass").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                checkLogin();
+            }
+        });
+    </script>
+</body>
+
+</html>
